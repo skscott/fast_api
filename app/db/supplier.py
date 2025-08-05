@@ -4,7 +4,7 @@ from typing import List
 
 from app.db.database import SessionLocal
 from app.db.models.supplier import Supplier as SupplierModel
-from app.db.schemas import SupplierCreate
+from app.schemas.supplier import SupplierCreate
 
 @contextmanager
 def session_scope():

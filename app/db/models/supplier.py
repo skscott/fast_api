@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Numeric
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 
 class Supplier(Base):
@@ -9,3 +10,5 @@ class Supplier(Base):
     address = Column(String(100))
     client_number = Column(String(10))
     monthly_payment = Column(Numeric(5, 2), default=0)
+
+    contract_groups = relationship("ContractGroup", back_populates="supplier", cascade="all, delete-orphan")

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.crud import contract_group
 from app.db.database import Base, engine, SessionLocal
 from app.db.models import UIComponent as UIModel, User as UserModel, Reading
 from app.core.security import get_password_hash
@@ -110,6 +111,7 @@ app.include_router(auth.router)
 app.include_router(uicomponent.router)
 app.include_router(reading.router)
 app.include_router(supplier_routes.router)
+app.include_router(contract_group.router)
 
 
 # 🌐 CORS
