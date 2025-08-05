@@ -1,4 +1,4 @@
-# hive_api/app/db/database.py
+# app/db/database.py
 
 import os
 from dotenv import load_dotenv

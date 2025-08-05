@@ -1,6 +1,6 @@
 # drone_registry.py
 # -*- coding: utf-8 -*-
-# This file is part of the Hive API project.
+# This file is part of the etracker v3 project.
 
 from datetime import datetime, timezone
 from typing import Optional

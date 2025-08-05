@@ -52,8 +52,8 @@ class UIComponent(UIComponentBase):
         from_attributes = True  # or orm_mode = True if you're on Pydantic v1
 
 
-# Assuming you also have a ContractCombination Pydantic model
-# from .contract_combination import ContractCombinationBase
+# Assuming you also have a Supplier Pydantic model
+# from .supplier import SupplierBase
 
 class SupplierBase(BaseModel):
     name: str
@@ -72,7 +72,7 @@ class SupplierUpdate(SupplierBase):
 
 class Supplier(SupplierBase):
     id: int
-    # contract_combinations: List[ContractCombinationBase]  # If you're returning ContractCombination data
+    # suppliers: List[SupplierBase]  # If you're returning Supplier data
 
     class Config:
         orm_mode = True
