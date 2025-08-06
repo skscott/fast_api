@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from datetime import datetime, date
 
 from app.crud import contract
@@ -10,7 +10,7 @@ from app.db.models import UIComponent as UIModel, User as UserModel, Supplier as
 from app.db.models.utility import Utility as UtilityModel
 from app.core.security import get_password_hash
 
-from app.routes import reading, auth, uicomponent, contract, supplier, utility
+from app.routes import import_readings, reading, auth, uicomponent, contract, supplier, utility
 from decimal import Decimal
 
 
@@ -150,7 +150,7 @@ async def lifespan(app: FastAPI):
                 name="2023 Essent",
                 description="Essent gas and electric 2023",
                 start_date=date(2022, 12, 1),
-                end_date=date(2023, 11, 30),
+                end_date=date(2023, 10, 31),
                 monthly_payment=Decimal("150"),
                 settlement_pdf="",
                 contract_pdf="",
@@ -160,7 +160,7 @@ async def lifespan(app: FastAPI):
                 name="2024 Eneco Stroom en Gas",
                 description="Eneco Wind, Zon en Gas",
                 start_date=date(2023, 11, 1),
-                end_date=date(2024, 10, 31),
+                end_date=date(2024, 11, 17),
                 monthly_payment=Decimal("39"),
                 settlement_pdf="",
                 contract_pdf="Contract_Eneco_2024.pdf",
@@ -169,7 +169,7 @@ async def lifespan(app: FastAPI):
             ContractModel(
                 name="Essent 2025",
                 description="Gas and Electra",
-                start_date=date(2024, 11, 1),
+                start_date=date(2024, 11, 18),
                 end_date=date(2025, 11, 30),
                 monthly_payment=Decimal("66"),
                 settlement_pdf="",
@@ -284,6 +284,7 @@ app.include_router(reading.router)
 app.include_router(supplier.router)
 app.include_router(contract.router)
 app.include_router(utility.router)
+app.include_router(import_readings.router)
 
 
 # 🌐 CORS

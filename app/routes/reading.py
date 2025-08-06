@@ -1,12 +1,27 @@
-from fastapi import APIRouter, Depends
+# app/routes/reading.py
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
-from app.db.models.reading import Reading
 from app.db.database import get_db
-from app.db.schemas import Reading as ReadingSchema
+from app.db.schemas.reading import ReadingCreate, ReadingRead
+from app.crud import reading as crud
 
-router = APIRouter()
+router = APIRouter(prefix="/readings", tags=["Readings"])
 
-@router.get("/readings/latest", response_model=list[ReadingSchema])
-def get_latest_readings(limit: int = 10, db: Session = Depends(get_db)):
-    return db.query(Reading).order_by(Reading.timestamp.desc()).limit(limit).all()
+@router.post("/", response_model=ReadingRead)
+def create(data: ReadingCreate, db: Session = Depends(get_db)):
+    return crud.create_reading(db, data)
+
+@router.get("/", response_model=list[ReadingRead])
+def list_all(db: Session = Depends(get_db)):
+    return crud.get_all_readings(db)
+
+@router.get("/utility/{utility_id}", response_model=list[ReadingRead])
+def list_by_utility(utility_id: int, db: Session = Depends(get_db)):
+    return crud.get_readings_by_utility(db, utility_id)
+
+@router.get("/{reading_id}", response_model=ReadingRead)
+def get_one(reading_id: int, db: Session = Depends(get_db)):
+    reading = crud.get_reading(db, reading_id)
+    if not reading:
+        raise HTTPException(status_code=404, detail="Reading not found")
+    return reading

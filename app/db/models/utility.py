@@ -19,3 +19,9 @@ class Utility(Base):
 
     contract = relationship("Contract", back_populates="utilities")
 
+    # app/db/models/utility.py
+    readings = relationship(
+        "Reading",
+        back_populates="utility",
+        cascade="all, delete-orphan"
+    )
