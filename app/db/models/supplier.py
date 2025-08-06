@@ -11,4 +11,4 @@ class Supplier(Base):
     client_number = Column(String(10))
     monthly_payment = Column(Numeric(5, 2), default=0)
 
-    contract_groups = relationship("ContractGroup", back_populates="supplier", cascade="all, delete-orphan")
+    contract = relationship("Contract", back_populates="supplier", cascade="all, delete-orphan")

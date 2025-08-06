@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.db import uicomponent
+from app.crud import uicomponent
 from app.db.schemas import UIComponentCreate
 
 router = APIRouter()

@@ -1,25 +1,18 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime, date
 
-from app.crud import contract_group
+from app.crud import contract
 from app.db.database import Base, engine, SessionLocal
-from app.db.models import UIComponent as UIModel, User as UserModel, Reading
+from app.db.models import UIComponent as UIModel, User as UserModel, Supplier as SupplierModel, Contract as ContractModel, UIComponent as UIModel
+from app.db.models.utility import Utility as UtilityModel
 from app.core.security import get_password_hash
 
-from app.db.models.user import User as UserModel
-from app.db.models.uicomponent import UIComponent as UIModel
-from app.db import uicomponent
+from app.routes import reading, auth, uicomponent, contract, supplier, utility
+from decimal import Decimal
 
-from app.db.models.supplier import Supplier as SupplierModel
-import app.db.supplier as supplier_models  # ← renamed
-import app.routes.supplier as supplier_routes  # ← renamed
-
-
-from app.routes import reading, auth, uicomponent, supplier
-
-from sqlalchemy.exc import IntegrityError
-from datetime import datetime
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,49 +41,229 @@ async def lifespan(app: FastAPI):
             db.add_all(default_components)
             print("✅ Default UI components created.")
 
-        from decimal import Decimal
 
-        try:
-            print("👀 Checking supplier count...")
-            count = db.query(SupplierModel).count()
-            print(f"📊 Supplier count = {count}")
-            if db.query(SupplierModel).count() == 0:
-                default_suppliers = [
-                    SupplierModel(name="Essent Retail Energie B.V.",
-                                address="Postbus 1484, 5200 BM Hertogenbosch.",
-                                client_number="172351027",
-                                monthly_payment=Decimal("115")),
-                    SupplierModel(name="N.V. Nuon Energie",
-                                address="Hoekenrode 8 1102 BR Amsterdam",
-                                client_number="257081321",
-                                monthly_payment=Decimal("100")),
-                    SupplierModel(name="Vandenbron",
-                                address="Torenallee 32-10 5617 BD Eindhoven",
-                                client_number="2117826",
-                                monthly_payment=Decimal("0")),
-                    SupplierModel(name="EnergieFlex",
-                                address="Johan Huizingalaan  400  1066JS Amsterdam",
-                                client_number="67414",
-                                monthly_payment=Decimal("132")),
-                    SupplierModel(name="Nederlandse Energie Matschappij",
-                                address="Aert van Nesstraat 45 3012 CA Rotterdam",
-                                client_number="3000442533",
-                                monthly_payment=Decimal("175")),
-                    SupplierModel(name="Budget Energie",
-                                address="tba",
-                                client_number="3285822",
-                                monthly_payment=Decimal("0")),
-                    SupplierModel(name="Eneco",
-                                address="Postbus 10",
-                                client_number="Postbus 10",
-                                monthly_payment=Decimal("331")),
-                ]
+        print("👀 Checking supplier count...")
+        count = db.query(SupplierModel).count()
+        print(f"📊 Supplier count = {count}")
+        if db.query(SupplierModel).count() == 0:
+            default_suppliers = [
+                SupplierModel(name="Essent Retail Energie B.V.",
+                            address="Postbus 1484, 5200 BM Hertogenbosch.",
+                            client_number="172351027",
+                            monthly_payment=Decimal("115")),
+                SupplierModel(name="N.V. Nuon Energie",
+                            address="Hoekenrode 8 1102 BR Amsterdam",
+                            client_number="257081321",
+                            monthly_payment=Decimal("100")),
+                SupplierModel(name="Vandenbron",
+                            address="Torenallee 32-10 5617 BD Eindhoven",
+                            client_number="2117826",
+                            monthly_payment=Decimal("0")),
+                SupplierModel(name="EnergieFlex",
+                            address="Johan Huizingalaan  400  1066JS Amsterdam",
+                            client_number="67414",
+                            monthly_payment=Decimal("132")),
+                SupplierModel(name="Nederlandse Energie Matschappij",
+                            address="Aert van Nesstraat 45 3012 CA Rotterdam",
+                            client_number="3000442533",
+                            monthly_payment=Decimal("175")),
+                SupplierModel(name="Budget Energie",
+                            address="tba",
+                            client_number="3285822",
+                            monthly_payment=Decimal("0")),
+                SupplierModel(name="Eneco",
+                            address="Postbus 10",
+                            client_number="Postbus 10",
+                            monthly_payment=Decimal("331")),
+            ]
 
-                db.add_all(default_suppliers)
-                db.commit()
-                print("✅ Default Suppliers created.")
-        except Exception as e:
-            print("❌ Exception when querying suppliers:", e)
+            db.add_all(default_suppliers)
+            db.commit()
+            print("✅ Default Suppliers created.")
+
+        print("👀 Checking contract count...")
+        count = db.query(ContractModel).count()
+        print(f"📊 Contract count = {count}")        
+        if db.query(ContractModel).count() == 0:
+            default_contracts = [
+            ContractModel(
+                name="2021 Essent Combo",
+                description="Essent Gas and electric",
+                start_date=date(2020, 12, 1),
+                end_date=date(2021, 11, 30),
+                monthly_payment=Decimal("115"),
+                settlement_pdf="Jaarrekening.pdf",
+                contract_pdf="Essent 2020 tarieven.pdf",
+                supplier_id=1
+            ),
+            ContractModel(
+                name="2022 Essent",
+                description="Essent gas and electric",
+                start_date=date(2021, 12, 1),
+                end_date=date(2022, 11, 30),
+                monthly_payment=Decimal("135"),
+                settlement_pdf="Essent 2021 Jaarrekening.pdf",
+                contract_pdf="",
+                supplier_id=1
+            ),
+            ContractModel(
+                name="2019 Nuon",
+                description="Nuon gas and electric",
+                start_date=date(2019, 12, 1),
+                end_date=date(2020, 11, 30),
+                monthly_payment=Decimal("100"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=2
+            ),
+            ContractModel(
+                name="2018 EnergyFlex",
+                description="EnergyFlex Gas and electric",
+                start_date=date(2017, 10, 1),
+                end_date=date(2018, 8, 1),
+                monthly_payment=Decimal("100"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=4
+            ),
+            ContractModel(
+                name="2014-2015 NLE",
+                description="NLE Gas and Electra",
+                start_date=date(2014, 9, 4),
+                end_date=date(2015, 9, 3),
+                monthly_payment=Decimal("175"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=5
+            ),
+            ContractModel(
+                name="2016-2017 Vandebron Gas and Electra",
+                description="2016-2017 Vandenbron Gas and Electra 1 Jaar Vast Consumentenbond",
+                start_date=date(2016, 9, 4),
+                end_date=date(2017, 9, 3),
+                monthly_payment=Decimal("100"),
+                settlement_pdf="",
+                contract_pdf="Contract_1187LG38_2016-09-23.pdf",
+                supplier_id=3
+            ),
+            ContractModel(
+                name="2023 Essent",
+                description="Essent gas and electric 2023",
+                start_date=date(2022, 12, 1),
+                end_date=date(2023, 11, 30),
+                monthly_payment=Decimal("150"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=1
+            ),
+            ContractModel(
+                name="2024 Eneco Stroom en Gas",
+                description="Eneco Wind, Zon en Gas",
+                start_date=date(2023, 11, 1),
+                end_date=date(2024, 10, 31),
+                monthly_payment=Decimal("39"),
+                settlement_pdf="",
+                contract_pdf="Contract_Eneco_2024.pdf",
+                supplier_id=7
+            ),
+            ContractModel(
+                name="Essent 2025",
+                description="Gas and Electra",
+                start_date=date(2024, 11, 1),
+                end_date=date(2025, 11, 30),
+                monthly_payment=Decimal("66"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=1
+            ),]
+            db.add_all(default_contracts)
+            db.commit()
+            print("✅ Default Contracts created.")
+
+
+        # Add this to your lifespan() block after contracts
+        print("\U0001F50D Checking utility count...")
+        if db.query(UtilityModel).count() == 0:
+            default_utilities = [
+                UtilityModel(
+                    type="GREEN",
+                    text="Eelectric 2023",
+                    description="Gas and Electric 2023",
+                    start_reading=Decimal("51305"),
+                    end_reading=Decimal("51931"),
+                    start_reading_reduced=Decimal("48454"),
+                    end_reading_reduced=Decimal("48454"),
+                    estimated_use=Decimal("0"),
+                    contract_id=7
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Gas 2023",
+                    description="Essent gas and electric 2023",
+                    start_reading=Decimal("39122"),
+                    end_reading=Decimal("39437.63"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=7
+                ),
+                UtilityModel(
+                    type="GREEN",
+                    text="Startdatum levering : 31 oktober 2023 Einddatum vaste looptijd : 30 oktober 2024",
+                    description="Eneco HollandseWind & Zon Actie 1 jaar",
+                    start_reading=Decimal("51904"),
+                    end_reading=Decimal("53067"),
+                    start_reading_reduced=Decimal("48454"),
+                    end_reading_reduced=Decimal("48454"),
+                    estimated_use=Decimal("0"),
+                    contract_id=8
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Startdatum levering : 31 oktober 2023 Einddatum vaste looptijd : 30 oktober 2024",
+                    description="Eneco Gas Actie 1 jaar",
+                    start_reading=Decimal("39436.05"),
+                    end_reading=Decimal("39713.25"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
+                    estimated_use=Decimal("300"),
+                    contract_id=8
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Essent Gas 2025",
+                    description="Essent Gas",
+                    start_reading=Decimal("51305"),
+                    end_reading=Decimal("39911.77"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=9
+                ),
+                UtilityModel(
+                    type="GREY",
+                    text="Essent Electra 2025",
+                    description="Essent Electra",
+                    start_reading=Decimal("51305"),
+                    end_reading=Decimal("53716"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("48454"),
+                    estimated_use=Decimal("0"),
+                    contract_id=9
+                ),
+            ]
+
+            db.add_all(default_utilities)
+            db.commit()
+            print("\u2705 Default Utilities created.")
+
+
+
+
+
+
+
+
 
         db.commit()
     except IntegrityError:
@@ -104,14 +277,13 @@ async def lifespan(app: FastAPI):
 # 🚀 Create the FastAPI app using the lifespan
 app = FastAPI(lifespan=lifespan)
 
-# 📡 Include your routers
-# hivemind routes
 app.include_router(reading.router)
 app.include_router(auth.router)
 app.include_router(uicomponent.router)
 app.include_router(reading.router)
-app.include_router(supplier_routes.router)
-app.include_router(contract_group.router)
+app.include_router(supplier.router)
+app.include_router(contract.router)
+app.include_router(utility.router)
 
 
 # 🌐 CORS

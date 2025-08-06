@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import date
 from typing import Optional
 
-class ContractGroupBase(BaseModel):
+class ContractBase(BaseModel):
     name: str
     description: str
     start_date: date
@@ -11,10 +11,10 @@ class ContractGroupBase(BaseModel):
     settlement_pdf: Optional[str] = ""
     contract_pdf: Optional[str] = ""
 
-class ContractGroupCreate(ContractGroupBase):
+class ContractCreate(ContractBase):
     supplier_id: int
 
-class ContractGroupRead(ContractGroupBase):
+class ContractRead(ContractBase):
     id: int
     supplier_id: int
 

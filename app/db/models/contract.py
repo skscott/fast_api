@@ -3,8 +3,8 @@ from sqlalchemy.orm import relationship, validates
 from app.db.database import Base
 from decimal import Decimal
 
-class ContractGroup(Base):
-    __tablename__ = "contract_groups"
+class Contract(Base):
+    __tablename__ = "contract"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255))
@@ -16,10 +16,8 @@ class ContractGroup(Base):
     contract_pdf = Column(Text, default="")
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
 
-    supplier = relationship("Supplier", back_populates="contract_groups")
-
-    # Optional: add reverse relationship from related contracts if needed
-    # contracts = relationship("Contract", back_populates="contract_group")
-
+    supplier = relationship("Supplier", back_populates="contract")
+    utilities = relationship("Utility", back_populates="contract", cascade="all, delete-orphan")
+    
     def __str__(self):
         return f"{self.description} {self.start_date} {self.end_date} {self.monthly_payment}"
