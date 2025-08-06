@@ -12,8 +12,6 @@ class Utility(Base):
     description = Column(String(255))
     start_reading = Column(Numeric(10, 3))
     end_reading = Column(Numeric(10, 3))
-    start_reading_reduced = Column(Numeric(10, 3))
-    end_reading_reduced = Column(Numeric(10, 3))
     estimated_use = Column(Numeric(10, 3))
     contract_id = Column(Integer, ForeignKey("contract.id"))
 

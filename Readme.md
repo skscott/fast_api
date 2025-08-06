@@ -24,3 +24,8 @@ fuser -k 8000/tcp
 ```
 find . -type d -name __pycache__ -exec rm -r {} +
 ```
+
+## Seed readings
+
+curl -X POST http://localhost:8000/import/meter-readings \
+  -F "file=@reading_seed.csv"

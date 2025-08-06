@@ -1,36 +1,15 @@
-# app/routes/import_readings.py
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models.reading import Reading
 from app.db.models.utility import Utility
+from app.db.models.contract import Contract
 import csv
 from io import StringIO
 from datetime import datetime
 from decimal import Decimal
-from app.db.models.contract import Contract
 
 router = APIRouter(prefix="/import", tags=["import"])
-
-# Utility type constants
-GAS = "GAS"
-GREY = "GREY"  # stand_i (electricity day)
-NIGHT = "NIGHT"  # stand_ii (electricity night)
-
-# Utility lookup by timestamp and type
-def resolve_utility_id(db: Session, reading_time: datetime, utility_type: str) -> int:
-    utilities = db.query(Utility).join(Utility.contract).filter(
-        Utility.type == utility_type,
-
-        Utility.contract.has(Contract.start_date <= reading_time),
-        Utility.contract.has(Contract.end_date >= reading_time),
-    ).all()
-
-    if not utilities:
-        raise HTTPException(status_code=404, detail=f"No utility found for {utility_type} on {reading_time.date()}")
-
-    # Use the first matching utility
-    return utilities[0].id
 
 @router.post("/meter-readings")
 def import_meter_readings(file: UploadFile = File(...), db: Session = Depends(get_db)):
@@ -44,26 +23,66 @@ def import_meter_readings(file: UploadFile = File(...), db: Session = Depends(ge
 
     for row in csv_reader:
         try:
+            # timestamp = datetime.strptime(row["consumption_date"].strip(), "%Y-%m-%d").date()
             timestamp = datetime.fromisoformat(row["consumption_date"].strip())
-            gas_val = Decimal(row["gas"])
-            stand_i_val = Decimal(row["stand_i"])
-            stand_ii_val = Decimal(row["stand_ii"])
+
+            # Find contract for the reading date
+            contract = db.query(Contract).filter(
+                Contract.start_date <= timestamp,
+                Contract.end_date >= timestamp
+            ).first()
+
+            if not contract:
+                skipped += 1
+                print(f"❌ No contract for {timestamp}")
+                continue
+
+            # Check for ELECTRIC and GAS utilities
+            normal = db.query(Utility).filter_by(
+                contract_id=contract.id,
+                type="NORMAL"
+            ).first()
+
+            reduced = db.query(Utility).filter_by(
+                contract_id=contract.id,
+                type="REDUCED"
+            ).first()
+
+            gas_utility = db.query(Utility).filter_by(
+                contract_id=contract.id,
+                type="GAS"
+            ).first()
+
+            if not normal and not reduced and not gas_utility:
+                skipped += 1
+                print(f"⚠️ Missing utilities for {timestamp} in contract {contract.name}")
+                continue
 
             readings = []
 
-            for value, ut_type in [
-                (gas_val, GAS),
-                (stand_i_val, GREY),
-                (stand_ii_val, NIGHT)
-            ]:
-                utility_id = resolve_utility_id(db, timestamp, ut_type)
-                reading = Reading(
+            if row.get("stand_i"):
+                readings.append(Reading(
                     timestamp=timestamp,
-                    value=value,
-                    unit="kWh" if ut_type in [GREY, NIGHT] else "m3",
-                    utility_id=utility_id
-                )
-                readings.append(reading)
+                    value=Decimal(row["stand_i"]),
+                    unit="kWh",
+                    utility_id=normal.id
+                ))
+
+            if row.get("stand_ii"):
+                readings.append(Reading(
+                    timestamp=timestamp,
+                    value=Decimal(row["stand_ii"]),
+                    unit="kWh",
+                    utility_id=reduced.id
+                ))
+
+            if row.get("gas"):
+                readings.append(Reading(
+                    timestamp=timestamp,
+                    value=Decimal(row["gas"]),
+                    unit="m3",
+                    utility_id=gas_utility.id
+                ))
 
             db.add_all(readings)
             count += len(readings)

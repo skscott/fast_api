@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🐍 FastAPI (debug with uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/.venv/bin/uvicorn",
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--host", "127.0.0.1",
+        "--port", "8000"
+      ],
+      "jinja": true,
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  ]
+}

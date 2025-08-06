@@ -16,6 +16,11 @@ from decimal import Decimal
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import debugpy
+    debugpy.listen(("0.0.0.0", 5678))  # or ("localhost", 5678)
+    print("✅ Waiting for debugger attach...")
+    debugpy.wait_for_client()
+
     # 🛠️ Create tables
     print("🔍 Registered tables:", Base.metadata.tables.keys())
     
@@ -86,6 +91,7 @@ async def lifespan(app: FastAPI):
         print(f"📊 Contract count = {count}")        
         if db.query(ContractModel).count() == 0:
             default_contracts = [
+
             ContractModel(
                 name="2021 Essent Combo",
                 description="Essent Gas and electric",
@@ -94,16 +100,6 @@ async def lifespan(app: FastAPI):
                 monthly_payment=Decimal("115"),
                 settlement_pdf="Jaarrekening.pdf",
                 contract_pdf="Essent 2020 tarieven.pdf",
-                supplier_id=1
-            ),
-            ContractModel(
-                name="2022 Essent",
-                description="Essent gas and electric",
-                start_date=date(2021, 12, 1),
-                end_date=date(2022, 11, 30),
-                monthly_payment=Decimal("135"),
-                settlement_pdf="Essent 2021 Jaarrekening.pdf",
-                contract_pdf="",
                 supplier_id=1
             ),
             ContractModel(
@@ -157,6 +153,16 @@ async def lifespan(app: FastAPI):
                 supplier_id=1
             ),
             ContractModel(
+                name="2022 Essent",
+                description="Essent gas and electric 2022",
+                start_date=date(2022, 12, 1),
+                end_date=date(2023, 10, 31),
+                monthly_payment=Decimal("150"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=1
+            ),
+            ContractModel(
                 name="2024 Eneco Stroom en Gas",
                 description="Eneco Wind, Zon en Gas",
                 start_date=date(2023, 11, 1),
@@ -184,17 +190,112 @@ async def lifespan(app: FastAPI):
         # Add this to your lifespan() block after contracts
         print("\U0001F50D Checking utility count...")
         if db.query(UtilityModel).count() == 0:
+            nuon_2019 = db.query(ContractModel).filter_by(name="2019 Nuon").first()
+            essent_2021 = db.query(ContractModel).filter_by(name="2021 Essent Combo").first()
+            essent_2022 = db.query(ContractModel).filter_by(name="2022 Essent").first()
+            essent_2023 = db.query(ContractModel).filter_by(name="2023 Essent").first()
+            eneco_2024 = db.query(ContractModel).filter_by(name="2024 Eneco Stroom en Gas").first()
+            essent_2025 = db.query(ContractModel).filter_by(name="Essent 2025").first()
+
             default_utilities = [
+
                 UtilityModel(
-                    type="GREEN",
+                    type="NORMAL",
+                    text="Nuon Electra 2019",
+                    description="Electricity for 2019",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=nuon_2019.id
+                ),
+                UtilityModel(
+                    type="REDUCED",
+                    text="Nuon Electra 2019",
+                    description="Electricity for 2019",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=nuon_2019.id
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Nuon Gas 2019",
+                    description="Gas for 2019",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=nuon_2019.id
+                ),
+                UtilityModel(
+                    type="NORMAL",
+                    text="Essent Electra 2021",
+                    description="Electricity for 2021",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2021.id
+                ),
+                UtilityModel(
+                    type="REDUCED",
+                    text="Essent Electra 2021",
+                    description="Electricity for 2021",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2021.id
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Essent Gas 2021",
+                    description="Gas for 2021",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2021.id
+                ),
+                UtilityModel(
+                    type="NORMAL",
+                    text="Essent Electra 2022",
+                    description="Electricity for 2022",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2022.id
+                ),
+                UtilityModel(
+                    type="REDUCED",
+                    text="Essent Electra 2022",
+                    description="Electricity for 2022",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2022.id
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Essent Gas 2022",
+                    description="Gas for 2022",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2022.id
+                ),
+                UtilityModel(
+                    type="NORMAL",
                     text="Eelectric 2023",
                     description="Gas and Electric 2023",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("51931"),
-                    start_reading_reduced=Decimal("48454"),
-                    end_reading_reduced=Decimal("48454"),
                     estimated_use=Decimal("0"),
-                    contract_id=7
+                    contract_id=essent_2023.id
+                ),                UtilityModel(
+                type="REDUCED",
+                    text="Eelectric 2023",
+                    description="Gas and Electric 2023",
+                    start_reading=Decimal("51305"),
+                    end_reading=Decimal("51931"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2023.id
                 ),
                 UtilityModel(
                     type="GAS",
@@ -202,21 +303,26 @@ async def lifespan(app: FastAPI):
                     description="Essent gas and electric 2023",
                     start_reading=Decimal("39122"),
                     end_reading=Decimal("39437.63"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
-                    contract_id=7
+                    contract_id=essent_2023.id
                 ),
                 UtilityModel(
-                    type="GREEN",
+                    type="NORMAL",
                     text="Startdatum levering : 31 oktober 2023 Einddatum vaste looptijd : 30 oktober 2024",
                     description="Eneco HollandseWind & Zon Actie 1 jaar",
                     start_reading=Decimal("51904"),
                     end_reading=Decimal("53067"),
-                    start_reading_reduced=Decimal("48454"),
-                    end_reading_reduced=Decimal("48454"),
                     estimated_use=Decimal("0"),
-                    contract_id=8
+                    contract_id=eneco_2024.id
+                ),
+                UtilityModel(
+                    type="REDUCED",
+                    text="Startdatum levering : 31 oktober 2023 Einddatum vaste looptijd : 30 oktober 2024",
+                    description="Eneco HollandseWind & Zon Actie 1 jaar",
+                    start_reading=Decimal("51904"),
+                    end_reading=Decimal("53067"),
+                    estimated_use=Decimal("0"),
+                    contract_id=eneco_2024.id
                 ),
                 UtilityModel(
                     type="GAS",
@@ -224,10 +330,26 @@ async def lifespan(app: FastAPI):
                     description="Eneco Gas Actie 1 jaar",
                     start_reading=Decimal("39436.05"),
                     end_reading=Decimal("39713.25"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("300"),
-                    contract_id=8
+                    contract_id=eneco_2024.id
+                ),
+                UtilityModel(
+                    type="NORMAL",
+                    text="Essent Electra 2025",
+                    description="Essent Electra",
+                    start_reading=Decimal("51305"),
+                    end_reading=Decimal("53716"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2025.id
+                ),
+                UtilityModel(
+                    type="REDUCED",
+                    text="Essent Electra 2025",
+                    description="Essent Electra",
+                    start_reading=Decimal("51305"),
+                    end_reading=Decimal("53716"),
+                    estimated_use=Decimal("0"),
+                    contract_id=essent_2025.id
                 ),
                 UtilityModel(
                     type="GAS",
@@ -235,35 +357,14 @@ async def lifespan(app: FastAPI):
                     description="Essent Gas",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("39911.77"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
-                    contract_id=9
+                    contract_id=essent_2025.id
                 ),
-                UtilityModel(
-                    type="GREY",
-                    text="Essent Electra 2025",
-                    description="Essent Electra",
-                    start_reading=Decimal("51305"),
-                    end_reading=Decimal("53716"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("48454"),
-                    estimated_use=Decimal("0"),
-                    contract_id=9
-                ),
-            ]
+                            ]
 
             db.add_all(default_utilities)
             db.commit()
             print("\u2705 Default Utilities created.")
-
-
-
-
-
-
-
-
 
         db.commit()
     except IntegrityError:
