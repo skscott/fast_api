@@ -80,6 +80,10 @@ async def lifespan(app: FastAPI):
                             address="Postbus 10",
                             client_number="Postbus 10",
                             monthly_payment=Decimal("331")),
+                SupplierModel(name="SBSS Solar Energy",
+                            address="Marshallsingel 38",
+                            client_number="1",
+                            monthly_payment=Decimal("0")),
             ]
 
             db.add_all(default_suppliers)
@@ -89,39 +93,14 @@ async def lifespan(app: FastAPI):
         print("👀 Checking contract count...")
         count = db.query(ContractModel).count()
         print(f"📊 Contract count = {count}")        
-        if db.query(ContractModel).count() == 0:
-            default_contracts = [
 
-            ContractModel(
-                name="2021 Essent Combo",
-                description="Essent Gas and electric",
-                start_date=date(2020, 12, 1),
-                end_date=date(2021, 11, 30),
-                monthly_payment=Decimal("115"),
-                settlement_pdf="Jaarrekening.pdf",
-                contract_pdf="Essent 2020 tarieven.pdf",
-                supplier_id=1
-            ),
-            ContractModel(
-                name="2019 Nuon",
-                description="Nuon gas and electric",
-                start_date=date(2019, 12, 1),
-                end_date=date(2020, 11, 30),
-                monthly_payment=Decimal("100"),
-                settlement_pdf="",
-                contract_pdf="",
-                supplier_id=2
-            ),
-            ContractModel(
-                name="2018 EnergyFlex",
-                description="EnergyFlex Gas and electric",
-                start_date=date(2017, 10, 1),
-                end_date=date(2018, 8, 1),
-                monthly_payment=Decimal("100"),
-                settlement_pdf="",
-                contract_pdf="",
-                supplier_id=4
-            ),
+
+        if db.query(ContractModel).count() == 0:
+            sbss = db.query(SupplierModel).filter_by(name="SBSS Solar Energy").first()
+            #
+            # Gas and electric
+            #
+            default_contracts = [
             ContractModel(
                 name="2014-2015 NLE",
                 description="NLE Gas and Electra",
@@ -135,16 +114,46 @@ async def lifespan(app: FastAPI):
             ContractModel(
                 name="2016-2017 Vandebron Gas and Electra",
                 description="2016-2017 Vandenbron Gas and Electra 1 Jaar Vast Consumentenbond",
-                start_date=date(2016, 9, 4),
-                end_date=date(2017, 9, 3),
+                start_date=date(2015, 9, 5),
+                end_date=date(2017, 9, 30),
                 monthly_payment=Decimal("100"),
                 settlement_pdf="",
                 contract_pdf="Contract_1187LG38_2016-09-23.pdf",
                 supplier_id=3
             ),
             ContractModel(
-                name="2023 Essent",
-                description="Essent gas and electric 2023",
+                name="2018 EnergyFlex",
+                description="EnergyFlex Gas and electric",
+                start_date=date(2017, 10, 1),
+                end_date=date(2019, 11, 30),
+                monthly_payment=Decimal("100"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=4
+            ),
+            ContractModel(
+                name="2019 Nuon",
+                description="Nuon gas and electric",
+                start_date=date(2019, 12, 1),
+                end_date=date(2020, 11, 30),
+                monthly_payment=Decimal("100"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=2
+            ),
+            ContractModel(
+                name="2020 Essent Combo",
+                description="Essent Gas and electric",
+                start_date=date(2020, 12, 1),
+                end_date=date(2022, 11, 30),
+                monthly_payment=Decimal("115"),
+                settlement_pdf="Jaarrekening.pdf",
+                contract_pdf="Essent 2020 tarieven.pdf",
+                supplier_id=1
+            ),
+            ContractModel(
+                name="2022 Essent",
+                description="Essent gas and electric 2022",
                 start_date=date(2022, 12, 1),
                 end_date=date(2023, 10, 31),
                 monthly_payment=Decimal("150"),
@@ -153,8 +162,8 @@ async def lifespan(app: FastAPI):
                 supplier_id=1
             ),
             ContractModel(
-                name="2022 Essent",
-                description="Essent gas and electric 2022",
+                name="2023 Essent",
+                description="Essent gas and electric 2023",
                 start_date=date(2022, 12, 1),
                 end_date=date(2023, 10, 31),
                 monthly_payment=Decimal("150"),
@@ -181,7 +190,41 @@ async def lifespan(app: FastAPI):
                 settlement_pdf="",
                 contract_pdf="",
                 supplier_id=1
-            ),]
+            ),
+            # 
+            # Solar
+            #
+            ContractModel(
+                name="SBSS Solar Energy 2023",
+                description="Solar energy from 10 solar panels",
+                start_date=date(2023, 2, 16),
+                end_date=date(2023, 12, 31),
+                monthly_payment=Decimal("0"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=sbss.id
+            ),
+            ContractModel(
+                name="SBSS Solar Energy 2024",
+                description="Solar energy from 10 solar panels",
+                start_date=date(2024, 1, 1),
+                end_date=date(2024, 12, 31),
+                monthly_payment=Decimal("0"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=sbss.id
+            ),
+            ContractModel(
+                name="SBSS Solar Energy 2025",
+                description="Solar energy from 10 solar panels",
+                start_date=date(2025, 1, 1),
+                end_date=date(2025, 12, 31),
+                monthly_payment=Decimal("0"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=sbss.id
+            ),
+            ]
             db.add_all(default_contracts)
             db.commit()
             print("✅ Default Contracts created.")
@@ -191,13 +234,45 @@ async def lifespan(app: FastAPI):
         print("\U0001F50D Checking utility count...")
         if db.query(UtilityModel).count() == 0:
             nuon_2019 = db.query(ContractModel).filter_by(name="2019 Nuon").first()
-            essent_2021 = db.query(ContractModel).filter_by(name="2021 Essent Combo").first()
+            essent_2021 = db.query(ContractModel).filter_by(name="2020 Essent Combo").first()
             essent_2022 = db.query(ContractModel).filter_by(name="2022 Essent").first()
             essent_2023 = db.query(ContractModel).filter_by(name="2023 Essent").first()
             eneco_2024 = db.query(ContractModel).filter_by(name="2024 Eneco Stroom en Gas").first()
             essent_2025 = db.query(ContractModel).filter_by(name="Essent 2025").first()
+            eflex_2018 = db.query(ContractModel).filter_by(name="2018 EnergyFlex").first()
 
+            sbss_solar_2023 = db.query(ContractModel).filter_by(name="SBSS Solar Energy 2023").first()
+            sbss_solar_2024 = db.query(ContractModel).filter_by(name="SBSS Solar Energy 2024").first()
+            sbss_solar_2025 = db.query(ContractModel).filter_by(name="SBSS Solar Energy 2025").first()
+ 
             default_utilities = [
+                UtilityModel(
+                    type="NORMAL",
+                    text="Energyflex Electra 2018",
+                    description="Electricity for 2018",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=eflex_2018.id
+                ),
+                UtilityModel(
+                    type="REDUCED",
+                    text="Energyflex Reduced Electra 2018",
+                    description="Electricity for 2018",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=eflex_2018.id
+                ),
+                UtilityModel(
+                    type="GAS",
+                    text="Energyflex Gas 2018",
+                    description="Gas for 2018",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=eflex_2018.id
+                ),
 
                 UtilityModel(
                     type="NORMAL",
@@ -360,7 +435,37 @@ async def lifespan(app: FastAPI):
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
-                            ]
+                #
+                # Solar Utility
+                #
+                UtilityModel(
+                    type="SOLAR",
+                    text="Empahse Enlighten Panels",
+                    description="Solar Energy 2023",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=sbss_solar_2023.id
+                ),
+                UtilityModel(
+                    type="SOLAR",
+                    text="Empahse Enlighten Panels",
+                    description="Solar Energy 2024",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=sbss_solar_2024.id
+                ),
+                UtilityModel(
+                    type="SOLAR",
+                    text="Empahse Enlighten Panels",
+                    description="Solar Energy 2025",
+                    start_reading=Decimal("0"),
+                    end_reading=Decimal("0"),
+                    estimated_use=Decimal("0"),
+                    contract_id=sbss_solar_2025.id
+                ),
+            ]
 
             db.add_all(default_utilities)
             db.commit()

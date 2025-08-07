@@ -4,3 +4,4 @@ from .reading import ReadingBase, ReadingCreate, ReadingRead
 from .uicomponent import UIComponent, UIComponentBase, UIComponentCreate
 from .supplier import Supplier, SupplierCreate, SupplierUpdate
 from .utility import UtilityBase, UtilityRead, UtilityCreate
+from .solar import SolarBase, SolarRead, SolarCreate
