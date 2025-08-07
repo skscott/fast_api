@@ -15,7 +15,8 @@
       "jinja": true,
       "console": "integratedTerminal",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONWARNINGS": "ignore"
       }
     }
   ]

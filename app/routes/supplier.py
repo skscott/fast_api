@@ -4,6 +4,9 @@ from app.db import models, schemas
 from app.db.database import SessionLocal  # Make sure to configure a database session
 from typing import List
 
+from app.db.models.contract import Contract
+from app.db.schemas.contract import ContractRead
+
 router = APIRouter()
 
 # Dependency for getting the database session
@@ -36,3 +39,11 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
     db.commit()
     db.refresh(db_supplier)
     return db_supplier
+
+@router.get("/suppliers/{supplier_id}/contracts", response_model=List[ContractRead])
+def get_contracts_for_supplier(supplier_id: int, db: Session = Depends(get_db)):
+    # Assuming the Contract model has a supplier_id foreign key to link contracts to suppliers
+    contracts = db.query(Contract).filter(Contract.supplier_id == supplier_id).all()
+    if not contracts:
+        raise HTTPException(status_code=404, detail="Contracts not found for this supplier")
+    return contracts

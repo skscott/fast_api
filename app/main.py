@@ -13,13 +13,10 @@ from app.core.security import get_password_hash
 from app.routes import import_readings, reading, auth, uicomponent, contract, supplier, utility
 from decimal import Decimal
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     import debugpy
     debugpy.listen(("0.0.0.0", 5678))  # or ("localhost", 5678)
-    print("✅ Waiting for debugger attach...")
-    debugpy.wait_for_client()
 
     # 🛠️ Create tables
     print("🔍 Registered tables:", Base.metadata.tables.keys())
@@ -45,7 +42,6 @@ async def lifespan(app: FastAPI):
             ]
             db.add_all(default_components)
             print("✅ Default UI components created.")
-
 
         print("👀 Checking supplier count...")
         count = db.query(SupplierModel).count()
@@ -93,7 +89,6 @@ async def lifespan(app: FastAPI):
         print("👀 Checking contract count...")
         count = db.query(ContractModel).count()
         print(f"📊 Contract count = {count}")        
-
 
         if db.query(ContractModel).count() == 0:
             sbss = db.query(SupplierModel).filter_by(name="SBSS Solar Energy").first()
@@ -228,7 +223,6 @@ async def lifespan(app: FastAPI):
             db.add_all(default_contracts)
             db.commit()
             print("✅ Default Contracts created.")
-
 
         # Add this to your lifespan() block after contracts
         print("\U0001F50D Checking utility count...")
@@ -491,7 +485,6 @@ app.include_router(supplier.router)
 app.include_router(contract.router)
 app.include_router(utility.router)
 app.include_router(import_readings.router)
-
 
 # 🌐 CORS
 origins = [

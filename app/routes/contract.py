@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.schemas.contract import ContractCreate, ContractRead
@@ -17,3 +18,4 @@ def create_contract(group: ContractCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=list[ContractRead])
 def list_contract(db: Session = Depends(get_db)):
     return db.query(Contract).all()
+
