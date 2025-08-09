@@ -11,15 +11,41 @@ python -c "import os; from sqlalchemy import create_engine; from dotenv import l
 ```
 # Run
 ```
-source /home/ss/Source/fast_api/.venv/bin/activate
-cd ~/Source/fast_api
+source /home/ss/source/fast_api/venv/bin/activate
+cd ~/source/fast_api
 uvicorn app.main:app --reload
+DEBUG_MODE=1 uvicorn app.main:app --reload
+
 ```
 ### Quick Fix: Kill the Process Using the Port
 ```
 fuser -k 8000/tcp
+```
+
+### killport.sh — Search & Destroy Port Loiterers
+```
+#!/bin/bash
+# Usage: ./killport.sh 5678
+PORT=$1
+if [ -z "$PORT" ]; then
+  echo "Usage: $0 <port>"
+  exit 1
+fi
+
+PIDS=$(sudo lsof -t -iTCP:$PORT -sTCP:LISTEN)
+if [ -z "$PIDS" ]; then
+  echo "✅ No process found on port $PORT"
+else
+  echo "⚠️ Killing processes on port $PORT: $PIDS"
+  sudo kill -9 $PIDS
+fi
 
 ```
+
+
+
+
+
 ### clear python cache
 ```
 find . -type d -name __pycache__ -exec rm -r {} +

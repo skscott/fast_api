@@ -1,3 +1,6 @@
+# main.py
+import os
+import debugpy
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,12 +18,28 @@ from decimal import Decimal
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    import debugpy
-    debugpy.listen(("0.0.0.0", 5678))  # or ("localhost", 5678)
-
+    # Only enable debug if explicitly requested
+    if os.getenv("DEBUG_MODE") == "1":
+        try:
+            import debugpy
+            base_port = 5678
+            port = base_port
+            while port < base_port + 10:  # Try 10 ports max
+                try:
+                    debugpy.listen(("0.0.0.0", port))
+                    print(f"✅ debugpy listening on port {port}")
+                    break
+                except OSError:
+                    print(f"⚠️ Port {port} in use, trying {port + 1}...")
+                    port += 1
+            else:
+                print("❌ No free debugpy port found in range.")
+        except ImportError:
+            print("⚠️ debugpy not installed, skipping remote debugging")
+            
+    yield
     # 🛠️ Create tables
     print("🔍 Registered tables:", Base.metadata.tables.keys())
-    
     Base.metadata.create_all(bind=engine)
 
     # 🧬 Seed data

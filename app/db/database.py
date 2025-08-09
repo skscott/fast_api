@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 # Load environment variables from .env file
 # load_dotenv()
 # Load environment variables from a known path
-load_dotenv(dotenv_path="/home/ss/Source/fast_api/.env")
+load_dotenv(dotenv_path="/home/ss/source/fast_api/.env")
 
 # Build the database URL from environment variables
 POSTGRES_USER = os.getenv("POSTGRES_USER")
