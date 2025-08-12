@@ -18,25 +18,24 @@ from decimal import Decimal
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Only enable debug if explicitly requested
-    if os.getenv("DEBUG_MODE") == "1":
-        try:
-            import debugpy
-            base_port = 5678
-            port = base_port
-            while port < base_port + 10:  # Try 10 ports max
-                try:
-                    debugpy.listen(("0.0.0.0", port))
-                    print(f"✅ debugpy listening on port {port}")
-                    break
-                except OSError:
-                    print(f"⚠️ Port {port} in use, trying {port + 1}...")
-                    port += 1
-            else:
-                print("❌ No free debugpy port found in range.")
-        except ImportError:
-            print("⚠️ debugpy not installed, skipping remote debugging")
+    try:
+        import debugpy
+        base_port = 5678
+        port = base_port
+        while port < base_port + 10:  # Try 10 ports max
+            try:
+                debugpy.listen(("0.0.0.0", port))
+                print(f"✅ debugpy listening on port {port}")
+                break
+            except OSError:
+                print(f"⚠️ Port {port} in use, trying {port + 1}...")
+                port += 1
+        else:
+            print("❌ No free debugpy port found in range.")
+    except ImportError:
+        print("⚠️ debugpy not installed, skipping remote debugging")
             
-    yield
+    # yield
     # 🛠️ Create tables
     print("🔍 Registered tables:", Base.metadata.tables.keys())
     Base.metadata.create_all(bind=engine)
@@ -484,6 +483,10 @@ async def lifespan(app: FastAPI):
             print("\u2705 Default Utilities created.")
 
         db.commit()
+
+    except Exception as e:
+        print(f"Exception: {e}")
+
     except IntegrityError:
         db.rollback()
         print("⚠️ Seed data conflict — skipping.")

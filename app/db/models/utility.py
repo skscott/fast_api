@@ -1,4 +1,3 @@
-# app/db/models/utility.py
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -15,11 +14,11 @@ class Utility(Base):
     estimated_use = Column(Numeric(10, 3))
     contract_id = Column(Integer, ForeignKey("contract.id"))
 
+    # parent
     contract = relationship("Contract", back_populates="utilities")
 
-    # app/db/models/utility.py
-    readings = relationship(
-        "Reading",
-        back_populates="utility",
-        cascade="all, delete-orphan"
-    )
+    # children (optional in your app)
+    readings = relationship("Reading", back_populates="utility", cascade="all, delete-orphan")
+
+    # tariffs that are scoped to this utility
+    tariffs  = relationship("Tariff",  back_populates="utility",  cascade="all, delete-orphan")

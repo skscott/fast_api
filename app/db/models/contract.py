@@ -1,10 +1,9 @@
 from sqlalchemy import Column, Integer, String, Date, Numeric, Text, ForeignKey
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship
 from app.db.database import Base
-from decimal import Decimal
 
 class Contract(Base):
-    __tablename__ = "contract"
+    __tablename__ = "contract"  # table name can be singular; that's fine
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255))
@@ -16,8 +15,9 @@ class Contract(Base):
     contract_pdf = Column(Text, default="")
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
 
-    supplier = relationship("Supplier", back_populates="contract")
+    # 👇 singular, lower-case — MUST match Supplier.contracts
+    supplier  = relationship("Supplier", back_populates="contracts")
+
+    # children
     utilities = relationship("Utility", back_populates="contract", cascade="all, delete-orphan")
-    
-    def __str__(self):
-        return f"{self.description} {self.start_date} {self.end_date} {self.monthly_payment}"
+    tariffs   = relationship("Tariff",  back_populates="contract", cascade="all, delete-orphan")
