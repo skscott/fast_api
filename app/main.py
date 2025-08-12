@@ -1,6 +1,5 @@
 # main.py
 import os
-import debugpy
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware

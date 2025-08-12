@@ -6,6 +6,7 @@ from typing import List
 
 from app.db.models.contract import Contract
 from app.db.schemas.contract import ContractRead
+from app.db.schemas.supplier import SupplierBase
 
 router = APIRouter()
 
@@ -47,3 +48,35 @@ def get_contracts_for_supplier(supplier_id: int, db: Session = Depends(get_db)):
     if not contracts:
         raise HTTPException(status_code=404, detail="Contracts not found for this supplier")
     return contracts
+
+@router.put("/suppliers/{supplier_id}", response_model=schemas.Supplier)
+def update_supplier(
+    supplier_id: int,
+    supplier_update: schemas.SupplierUpdate,  # You'll need this schema
+    db: Session = Depends(get_db)
+):
+    db_supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+    if not db_supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+
+    for key, value in supplier_update.dict(exclude_unset=True).items():
+        setattr(db_supplier, key, value)
+
+    db.commit()
+    db.refresh(db_supplier)
+    return db_supplier
+
+@router.patch("/suppliers/{supplier_id}", response_model=schemas.Supplier)
+def patch_supplier(supplier_id: int, updates: SupplierBase, db: Session = Depends(get_db)):
+    supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+    if supplier is None:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+
+    data = updates.dict(exclude_unset=True)  # only provided fields
+    for key, value in data.items():
+        setattr(supplier, key, value)
+
+    db.add(supplier)
+    db.commit()
+    db.refresh(supplier)
+    return supplier

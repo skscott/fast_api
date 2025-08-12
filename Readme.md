@@ -11,7 +11,7 @@ python -c "import os; from sqlalchemy import create_engine; from dotenv import l
 ```
 # Run
 ```
-source /home/ss/source/fast_api/venv/bin/activate
+source /home/ss/Source/fast_api/venv/bin/activate
 cd ~/source/fast_api
 uvicorn app.main:app --reload
 DEBUG_MODE=1 uvicorn app.main:app --reload

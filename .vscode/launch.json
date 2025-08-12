@@ -5,7 +5,7 @@
       "name": "🐍 FastAPI (debug with uvicorn)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/.venv/bin/uvicorn",
+      "program": "${workspaceFolder}/venv/bin/uvicorn",
       "args": [
         "app.main:app",
         "--reload",
