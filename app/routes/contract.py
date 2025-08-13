@@ -5,9 +5,11 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models.contract import Contract
 from app.db.models.tariff import Tariff
+from app.db.models.utility import Utility
 from app.db.schemas.contract import ContractCreate, ContractRead, ContractUpdate
 from app.db.schemas.tariff import TariffCreate, TariffRead
 from app.crud import contract as crud
+from app.db.schemas.utility import UtilityRead
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
 
@@ -54,3 +56,10 @@ def create_tariff_for_contract(contract_id: int, body: TariffCreate, db: Session
     db.commit()
     db.refresh(tariff)
     return tariff
+
+@router.get("/{contract_id}/utilities", response_model=List[UtilityRead])
+def list_utilities_for_contract(contract_id: int, db: Session = Depends(get_db)):
+    contract = db.query(Contract).get(contract_id)
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    return db.query(Utility).filter(Utility.contract_id == contract_id).all()

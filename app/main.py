@@ -10,6 +10,8 @@ from app.crud import contract
 from app.db.database import Base, engine, SessionLocal
 from app.db.models import UIComponent as UIModel, User as UserModel, Supplier as SupplierModel, Contract as ContractModel, UIComponent as UIModel
 from app.db.models.utility import Utility as UtilityModel
+from app.db.models.tariff import Tariff  # and enums if you defined them
+
 from app.core.security import get_password_hash
 
 from app.routes import import_readings, reading, auth, uicomponent, contract, supplier, utility
@@ -263,6 +265,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2018",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eflex_2018.id
                 ),
@@ -272,6 +276,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2018",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eflex_2018.id
                 ),
@@ -281,6 +287,8 @@ async def lifespan(app: FastAPI):
                     description="Gas for 2018",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eflex_2018.id
                 ),
@@ -291,6 +299,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2019",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=nuon_2019.id
                 ),
@@ -300,6 +310,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2019",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=nuon_2019.id
                 ),
@@ -309,6 +321,8 @@ async def lifespan(app: FastAPI):
                     description="Gas for 2019",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=nuon_2019.id
                 ),
@@ -318,6 +332,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2021",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2021.id
                 ),
@@ -327,6 +343,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2021",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2021.id
                 ),
@@ -336,6 +354,8 @@ async def lifespan(app: FastAPI):
                     description="Gas for 2021",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2021.id
                 ),
@@ -345,6 +365,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2022",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2022.id
                 ),
@@ -354,6 +376,8 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2022",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2022.id
                 ),
@@ -363,6 +387,8 @@ async def lifespan(app: FastAPI):
                     description="Gas for 2022",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2022.id
                 ),
@@ -372,6 +398,8 @@ async def lifespan(app: FastAPI):
                     description="Gas and Electric 2023",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("51931"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2023.id
                 ),                UtilityModel(
@@ -380,6 +408,8 @@ async def lifespan(app: FastAPI):
                     description="Gas and Electric 2023",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("51931"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2023.id
                 ),
@@ -389,6 +419,8 @@ async def lifespan(app: FastAPI):
                     description="Essent gas and electric 2023",
                     start_reading=Decimal("39122"),
                     end_reading=Decimal("39437.63"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2023.id
                 ),
@@ -398,6 +430,8 @@ async def lifespan(app: FastAPI):
                     description="Eneco HollandseWind & Zon Actie 1 jaar",
                     start_reading=Decimal("51904"),
                     end_reading=Decimal("53067"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eneco_2024.id
                 ),
@@ -407,6 +441,8 @@ async def lifespan(app: FastAPI):
                     description="Eneco HollandseWind & Zon Actie 1 jaar",
                     start_reading=Decimal("51904"),
                     end_reading=Decimal("53067"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eneco_2024.id
                 ),
@@ -416,6 +452,8 @@ async def lifespan(app: FastAPI):
                     description="Eneco Gas Actie 1 jaar",
                     start_reading=Decimal("39436.05"),
                     end_reading=Decimal("39713.25"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("300"),
                     contract_id=eneco_2024.id
                 ),
@@ -425,6 +463,8 @@ async def lifespan(app: FastAPI):
                     description="Essent Electra",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("53716"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
@@ -434,6 +474,8 @@ async def lifespan(app: FastAPI):
                     description="Essent Electra",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("53716"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
@@ -443,6 +485,8 @@ async def lifespan(app: FastAPI):
                     description="Essent Gas",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("39911.77"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
@@ -455,6 +499,8 @@ async def lifespan(app: FastAPI):
                     description="Solar Energy 2023",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=sbss_solar_2023.id
                 ),
@@ -464,6 +510,8 @@ async def lifespan(app: FastAPI):
                     description="Solar Energy 2024",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=sbss_solar_2024.id
                 ),
@@ -473,6 +521,8 @@ async def lifespan(app: FastAPI):
                     description="Solar Energy 2025",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
+                    start_reading_reduced=Decimal("0"),
+                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=sbss_solar_2025.id
                 ),
@@ -481,6 +531,177 @@ async def lifespan(app: FastAPI):
             db.add_all(default_utilities)
             db.commit()
             print("\u2705 Default Utilities created.")
+
+         # only seed if there are no tariffs yet
+        tariff_count = db.query(Tariff).count()
+        print(f"🔍 Tariff count = {tariff_count}")
+        if tariff_count == 0:
+            # locate the contract and its utilities by type
+            essent_2025 = db.query(ContractModel).filter_by(name="Essent 2025").first()
+            if not essent_2025:
+                print("⚠️ 'Essent 2025' contract not found; skipping tariff seeding.")
+            else:
+                # fetch utilities under Essent 2025
+                util_normal = (
+                    db.query(UtilityModel)
+                    .filter(UtilityModel.contract_id == essent_2025.id, UtilityModel.type == "NORMAL")
+                    .first()
+                )
+                util_reduced = (
+                    db.query(UtilityModel)
+                    .filter(UtilityModel.contract_id == essent_2025.id, UtilityModel.type == "REDUCED")
+                    .first()
+                )
+                util_gas = (
+                    db.query(UtilityModel)
+                    .filter(UtilityModel.contract_id == essent_2025.id, UtilityModel.type == "GAS")
+                    .first()
+                )
+
+                if not (util_normal and util_reduced and util_gas):
+                    print("⚠️ Missing one or more utilities (NORMAL/REDUCED/GAS) for 'Essent 2025'; skipping tariff seeding.")
+                else:
+                    start = date(2024, 11, 17)
+                    end   = date(2025, 11, 16)
+
+                    # Electricity (NORMAL tariff)
+                    tariffs_e_normal = [
+                        Tariff(
+                            description="A. Totaal elektriciteit Enkeltarief (1 t/m 2.900 kWh) € 0,25608/kWh",
+                            amount=Decimal("0.25608"),
+                            tariff_sort="NORMAL",
+                            frequency="KWH",
+                            utility_id=util_normal.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="B. Variabele leveringskosten Enkeltarief € 0,13322/kWh",
+                            amount=Decimal("0.13322"),
+                            tariff_sort="VARIABLE",
+                            frequency="KWH",
+                            utility_id=util_normal.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="C. Vaste leveringskosten (€ 131,84) € 0,36121/dag",
+                            amount=Decimal("0.36121"),
+                            tariff_sort="FIXED",
+                            frequency="DAY",
+                            utility_id=util_normal.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="D. Liander N.V. : Capaciteitstarief t/m 3 x 25A of t/m 1 x 80A € 1,24860/dag",
+                            amount=Decimal("1.24860"),
+                            tariff_sort="NETWORK",
+                            frequency="DAY",
+                            utility_id=util_normal.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="F. Vermindering energiebelasting (- € 635,19) - € 1,74025/dag",
+                            amount=Decimal("-1.74025"),
+                            tariff_sort="TAX",
+                            frequency="DAY",
+                            utility_id=util_normal.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="E. Energiebelasting zone 2 (2.901 t/m 10.000 kWh) € 0,12286/kWh",
+                            amount=Decimal("0.12286"),
+                            tariff_sort="TAX",
+                            frequency="KWH",
+                            utility_id=util_normal.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                    ]
+
+                    # Electricity (REDUCED tariff) — if you want separate values for this, add them here.
+                    # For now we’ll leave it empty or copy if you prefer. Example (copy a couple):
+                    tariffs_e_reduced = [
+                        # Tariff(... same fields but utility_id=util_reduced.id ...)
+                    ]
+
+                    # Gas
+                    tariffs_gas = [
+                        Tariff(
+                            description="Totaal tarief gas (1 t/m 1.000 m3) € 1,28231/m3",
+                            amount=Decimal("1.28231"),
+                            tariff_sort="NORMAL",
+                            frequency="M3",
+                            utility_id=util_gas.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="Variabele leveringskosten (G1/gasregio 01) € 0,58274/m3",
+                            amount=Decimal("0.58274"),
+                            tariff_sort="VARIABLE",
+                            frequency="M3",
+                            utility_id=util_gas.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="Vaste leveringskosten (€ 95,83) € 0,27256/dag",
+                            amount=Decimal("0.27256"),
+                            tariff_sort="FIXED",
+                            frequency="DAY",
+                            utility_id=util_gas.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="Stedin Netbeheer B.V Capaciteitstarief t/m 10 m3/uur, stand.jaarv. < 500 m3 (€ 186,29) € 0,51038/dag",
+                            amount=Decimal("0.51038"),
+                            tariff_sort="NETWORK",
+                            frequency="DAY",
+                            utility_id=util_gas.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                        Tariff(
+                            description="Energiebelasting zone 1 (1 t/m 1.000 m3) € 0,69957/m3",
+                            amount=Decimal("0.69957"),
+                            tariff_sort="TAX",
+                            frequency="M3",
+                            utility_id=util_gas.id,
+                            contract_id=None,
+                            start_date=start,
+                            end_date=end,
+                            is_active=True,
+                        ),
+                    ]
+
+                    db.add_all(tariffs_e_normal + tariffs_e_reduced + tariffs_gas)
+                    db.commit()
+                    print("✅ Default Tariffs created for 'Essent 2025'.")
 
         db.commit()
 
