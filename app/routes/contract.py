@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models.contract import Contract
 from app.db.models.tariff import Tariff
-from app.db.schemas.contract import ContractCreate, ContractRead
+from app.db.schemas.contract import ContractCreate, ContractRead, ContractUpdate
 from app.db.schemas.tariff import TariffCreate, TariffRead
 from app.crud import contract as crud
 
@@ -17,6 +17,20 @@ def create_contract(group: ContractCreate, db: Session = Depends(get_db)):
         return crud.create_contract(db, group)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/{contract_id}", response_model=ContractRead)
+def update_contract(contract_id: int, body: ContractUpdate, db: Session = Depends(get_db)):
+    db_contract = db.query(Contract).get(contract_id)
+    if not db_contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(db_contract, field, value)
+    
+    db.add(db_contract)
+    db.commit()
+    db.refresh(db_contract)
+    return db_contract
 
 @router.get("/", response_model=List[ContractRead])
 def list_contracts(db: Session = Depends(get_db)):
