@@ -8,6 +8,11 @@ from app.db.models.utility import Utility
 from app.db.schemas.tariff import TariffCreate, TariffRead
 from app.db.schemas.utility import UtilityCreate, UtilityRead, UtilityUpdate
 from app.crud import utility as crud
+from datetime import date
+from fastapi import Query
+from app.services.cost_calculator import compute_utility_cost
+from app.db.schemas.cost import CostRead, TariffSpecItem
+
 
 router = APIRouter(prefix="/utilities", tags=["Utilities"])
 
@@ -60,3 +65,26 @@ def create_tariff_for_utility(utility_id: int, body: TariffCreate, db: Session =
     db.commit()
     db.refresh(tariff)
     return tariff
+
+
+@router.get("/{utility_id}/cost", response_model=CostRead)
+def get_utility_cost(
+    utility_id: int,
+    start: date = Query(..., description="Start date (YYYY-MM-DD)"),
+    end: date = Query(..., description="End date (YYYY-MM-DD)"),
+    include_contract: bool = Query(True, description="Include contract-level tariffs"),
+    db: Session = Depends(get_db),
+):
+    # Validate utility exists
+    if not db.get(Utility, utility_id):
+        raise HTTPException(status_code=404, detail="Utility not found")
+
+    cost = compute_utility_cost(db, utility_id, start, end, include_contract)
+
+    return {
+        "gas": cost.gas, "stand_i": cost.stand_i, "stand_ii": cost.stand_ii,
+        "single": cost.single, "fixed": cost.fixed, "variable": cost.variable,
+        "tax": cost.tax, "network": cost.network, "discount": cost.discount,
+        "total": cost.total,
+        "specification": cost.tariff_specification,
+    }

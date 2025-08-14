@@ -1,0 +1,48 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-08-14T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.0",
+  "resources": [
+    {
+      "_id": "req_utility_cost_test",
+      "parentId": "__WORKSPACE_ID__",
+      "modified": 1699999999999,
+      "created": 1699999999999,
+      "url": "http://127.0.0.1:8000/utilities/19/cost",
+      "name": "Get Utility Cost",
+      "description": "Fetches cost breakdown for a utility between start/end dates",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "start",
+          "value": "2024-01-01"
+        },
+        {
+          "name": "end",
+          "value": "2024-12-31"
+        },
+        {
+          "name": "include_contract",
+          "value": "true"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1699999999999,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "_type": "request"
+    }
+  ]
+}
