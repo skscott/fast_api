@@ -24,4 +24,4 @@ class Utility(Base):
     readings = relationship("Reading", back_populates="utility", cascade="all, delete-orphan")
 
     # tariffs that are scoped to this utility
-    tariffs  = relationship("Tariff",  back_populates="futility",  cascade="all, delete-orphan")
+    tariffs  = relationship("Tariff",  back_populates="utility",  cascade="all, delete-orphan")
