@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func, and_, desc
 from app.db.database import get_db
 from app.db.models.reading import Reading
 from app.db.models.solar import SolarReading
@@ -7,151 +8,215 @@ from app.db.models.utility import Utility
 from app.db.models.contract import Contract
 import csv
 from io import StringIO
-from datetime import datetime
-from decimal import Decimal
+from datetime import datetime, time
+from decimal import Decimal, InvalidOperation
 from collections import defaultdict
 
 router = APIRouter(prefix="/import", tags=["import"])
+
+# ---------- helpers ----------
+
+def _parse_decimal(raw: str | None) -> Decimal | None:
+    if raw is None:
+        return None
+    s = raw.strip()
+    if s == "":
+        return None
+    # tolerate 1,234.56 style input
+    s = s.replace(" ", "").replace(",", "")
+    try:
+        return Decimal(s)
+    except InvalidOperation:
+        return None
+
+def _get_contract_for_timestamp(db: Session, ts: datetime) -> Contract | None:
+    return (
+        db.query(Contract)
+        .filter(Contract.start_date <= ts, Contract.end_date >= ts)
+        .order_by(Contract.start_date.desc())
+        .first()
+    )
+
+def _get_utility(db: Session, contract_id: int, type_: str) -> Utility | None:
+    # case-sensitive in DB, but we normalize here just in case
+    return (
+        db.query(Utility)
+        .filter(Utility.contract_id == contract_id, func.upper(Utility.type) == func.upper(type_))
+        .first()
+    )
+
+def _last_before(db: Session, utility_id: int, ts: datetime) -> Reading | None:
+    return (
+        db.query(Reading)
+        .filter(Reading.utility_id == utility_id, Reading.timestamp < ts)
+        .order_by(Reading.timestamp.desc())
+        .first()
+    )
+
+def _get_existing(db: Session, utility_id: int, ts: datetime) -> Reading | None:
+    return (
+        db.query(Reading)
+        .filter(Reading.utility_id == utility_id, Reading.timestamp == ts)
+        .first()
+    )
+
+def _upsert_reading(
+    db: Session,
+    utility: Utility,
+    ts: datetime,
+    value: Decimal,
+) -> tuple[bool, str]:
+    """
+    Insert or update a reading for (utility, ts).
+    Returns (inserted, msg). Skips if non-monotonic (value < last).
+    """
+    unit = "m3" if utility.type == "GAS" else "kWh"
+
+    # monotonic guard (stands must not go backwards)
+    prev = _last_before(db, utility.id, ts)
+    if prev and value < prev.value:
+        return (False, f"non-monotonic for util {utility.id}: {value} < {prev.value} at {ts}")
+
+    existing = _get_existing(db, utility.id, ts)
+    if existing:
+        existing.value = value
+        existing.unit = unit
+        existing.source = existing.source or "import"
+        db.add(existing)
+        return (False, "updated existing")
+
+    db.add(Reading(timestamp=ts, value=value, unit=unit, source="import", utility_id=utility.id))
+    return (True, "inserted")
+
+# ---------- meter readings importer ----------
 
 @router.post("/meter-readings")
 def import_meter_readings(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported.")
 
-    contents = file.file.read().decode("utf-8")
-    csv_reader = csv.DictReader(StringIO(contents))
-    count = 0
+    contents = file.file.read().decode("utf-8", errors="replace")
+    reader = csv.DictReader(StringIO(contents))
+
+    inserted = 0
+    updated = 0
     skipped = 0
 
-    for row in csv_reader:
+    for row in reader:
         try:
-            # timestamp = datetime.strptime(row["consumption_date"].strip(), "%Y-%m-%d").date()
-            timestamp = datetime.fromisoformat(row["consumption_date"].strip())
+            # Accept both full ISO and plain date
+            raw_ts = row.get("consumption_date", "").strip()
+            ts = datetime.fromisoformat(raw_ts) if "T" in raw_ts else datetime.combine(datetime.fromisoformat(raw_ts).date(), time.min)
 
-            # Find contract for the reading date
-            contract = db.query(Contract).filter(
-                Contract.start_date <= timestamp,
-                Contract.end_date >= timestamp
-            ).first()
-
+            contract = _get_contract_for_timestamp(db, ts)
             if not contract:
                 skipped += 1
-                print(f"❌ No contract for {timestamp}")
+                print(f"❌ No contract covering {ts}")
                 continue
 
-            # Check for ELECTRIC and GAS utilities
-            normal = db.query(Utility).filter_by(
-                contract_id=contract.id,
-                type="NORMAL"
-            ).first()
+            # Look up utilities by contract + type
+            normal  = _get_utility(db, contract.id, "NORMAL")
+            reduced = _get_utility(db, contract.id, "REDUCED")
+            gas     = _get_utility(db, contract.id, "GAS")
 
-            reduced = db.query(Utility).filter_by(
-                contract_id=contract.id,
-                type="REDUCED"
-            ).first()
+            # Parse values (None if blank/invalid)
+            v_stand_i  = _parse_decimal(row.get("stand_i"))   # REDUCED (legacy/night)
+            v_stand_ii = _parse_decimal(row.get("stand_ii"))  # NORMAL  (day/single)
+            v_gas      = _parse_decimal(row.get("gas"))
 
-            gas_utility = db.query(Utility).filter_by(
-                contract_id=contract.id,
-                type="GAS"
-            ).first()
-
-            if not normal and not reduced and not gas_utility:
+            # REDUCED -> stand_i -> reduced utility
+            if v_stand_i is not None and reduced is not None:
+                ok, msg = _upsert_reading(db, reduced, ts, v_stand_i)
+                inserted += 1 if ok else 0
+                updated  += 0 if ok else 1
+            elif v_stand_i is not None and reduced is None:
                 skipped += 1
-                print(f"⚠️ Missing utilities for {timestamp} in contract {contract.name}")
-                continue
+                print(f"⚠️ No REDUCED utility for contract {contract.id} at {ts}; value={v_stand_i} skipped")
 
-            readings = []
+            # NORMAL -> stand_ii -> normal utility
+            if v_stand_ii is not None and normal is not None:
+                ok, msg = _upsert_reading(db, normal, ts, v_stand_ii)
+                inserted += 1 if ok else 0
+                updated  += 0 if ok else 1
+            elif v_stand_ii is not None and normal is None:
+                skipped += 1
+                print(f"⚠️ No NORMAL utility for contract {contract.id} at {ts}; value={v_stand_ii} skipped")
 
-            if row.get("stand_i"):
-                readings.append(Reading(
-                    timestamp=timestamp,
-                    value=Decimal(row["stand_i"]),
-                    unit="kWh",
-                    utility_id=normal.id
-                ))
-
-            if row.get("stand_ii"):
-                readings.append(Reading(
-                    timestamp=timestamp,
-                    value=Decimal(row["stand_ii"]),
-                    unit="kWh",
-                    utility_id=reduced.id
-                ))
-
-            if row.get("gas"):
-                readings.append(Reading(
-                    timestamp=timestamp,
-                    value=Decimal(row["gas"]),
-                    unit="m3",
-                    utility_id=gas_utility.id
-                ))
-
-            db.add_all(readings)
-            count += len(readings)
+            # GAS -> gas utility
+            if v_gas is not None and gas is not None:
+                ok, msg = _upsert_reading(db, gas, ts, v_gas)
+                inserted += 1 if ok else 0
+                updated  += 0 if ok else 1
+            elif v_gas is not None and gas is None:
+                skipped += 1
+                print(f"⚠️ No GAS utility for contract {contract.id} at {ts}; value={v_gas} skipped")
 
         except Exception as e:
             skipped += 1
-            print(f"⚠️ Skipped row {row.get('id', '?')}: {e}")
-            continue
+            print(f"⚠️ Skipped row (parse error): {e}; row={row}")
 
     db.commit()
-    return {"imported": count, "skipped": skipped}
+    return {"inserted": inserted, "updated": updated, "skipped": skipped}
+
+# ---------- solar readings importer (unchanged except tiny hardening) ----------
 
 @router.post("/solar-readings")
 def import_solar_readings(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are supported.")
 
-    contents = file.file.read().decode("utf-8")
-    csv_reader = csv.DictReader(StringIO(contents))
+    contents = file.file.read().decode("utf-8", errors="replace")
+    reader = csv.DictReader(StringIO(contents))
 
     totals_by_date = defaultdict(Decimal)
-    count = 0
+    count_rows = 0
     skipped = 0
 
-    for row in csv_reader:
+    for row in reader:
         try:
-            production_date = datetime.fromisoformat(row["production_date"].strip())
-            panel_serial = row["panel_serial_nbr"].strip()
-            energy = Decimal(row["energy_produced"].strip())
+            raw_ts = row["production_date"].strip()
+            ts = datetime.fromisoformat(raw_ts) if "T" in raw_ts else datetime.combine(datetime.fromisoformat(raw_ts).date(), time.min)
+            panel_serial = row.get("panel_serial_nbr", "").strip()
+            energy = _parse_decimal(row.get("energy_produced"))
+            if energy is None:
+                skipped += 1
+                continue
 
-            utility = db.query(Utility).join(Contract).filter(
-                Utility.type == "SOLAR",
-                Contract.start_date <= production_date,
-                Contract.end_date >= production_date,
-                Utility.contract_id == Contract.id
-            ).first()
+            utility = (
+                db.query(Utility)
+                .join(Contract, Contract.id == Utility.contract_id)
+                .filter(Utility.type == "SOLAR", Contract.start_date <= ts, Contract.end_date >= ts)
+                .first()
+            )
 
             if not utility:
                 skipped += 1
-                print(f"❌ No solar utility for {production_date.date()}")
+                print(f"❌ No SOLAR utility for {ts.date()}")
                 continue
 
-            solar = SolarReading(
-                production_date=production_date,
+            db.add(SolarReading(
+                production_date=ts,
                 energy_produced=energy,
                 unit="kWh",
                 panel_serial_nbr=panel_serial
-            )
-            db.add(solar)
-            totals_by_date[(production_date.date(), utility.id)] += energy
-            count += 1
-
+            ))
+            totals_by_date[(ts.date(), utility.id)] += energy
+            count_rows += 1
         except Exception as e:
             skipped += 1
-            print(f"⚠️ Skipped solar row {row.get('id', '?')}: {e}")
-            continue
+            print(f"⚠️ Skipped solar row: {e}; row={row}")
 
-    # Insert total readings per day per utility
+    # aggregate daily solar into Reading for the utility
     for (day, utility_id), total in totals_by_date.items():
-        reading = Reading(
-            timestamp=datetime.combine(day, datetime.min.time()),
-            value=total,
-            unit="kWh",
-            source="solar",
-            utility_id=utility_id
-        )
-        db.add(reading)
+        ts = datetime.combine(day, time.min)
+        existing = _get_existing(db, utility_id, ts)
+        if existing:
+            existing.value = total
+            existing.unit = "kWh"
+            existing.source = "solar"
+            db.add(existing)
+        else:
+            db.add(Reading(timestamp=ts, value=total, unit="kWh", source="solar", utility_id=utility_id))
 
     db.commit()
-    return {"solar_readings": count, "aggregated_days": len(totals_by_date), "skipped": skipped}
+    return {"solar_rows": count_rows, "aggregated_days": len(totals_by_date), "skipped": skipped}
