@@ -8,6 +8,7 @@ from app.db.models.utility import Utility
 from app.db.schemas.tariff import TariffCreate, TariffRead
 from app.db.schemas.utility import UtilityCreate, UtilityRead, UtilityUpdate
 from app.crud import utility as crud
+from app.crud import reading as crud_reading
 from datetime import date
 from fastapi import Query
 from app.services.cost_calculator import compute_utility_cost
@@ -88,3 +89,14 @@ def get_utility_cost(
         "total": cost.total,
         "specification": cost.tariff_specification,
     }
+
+# utility.py
+from app.db.schemas.reading import ReadingRead
+
+@router.get("/{utility_id}/readings", response_model=list[ReadingRead])
+def list_readings_for_utility(utility_id: int, db: Session = Depends(get_db)):
+    utility = db.get(Utility, utility_id)
+    if not utility:
+        raise HTTPException(status_code=404, detail="Utility not found")
+
+    return crud_reading.get_readings_by_utility(db, utility_id)
