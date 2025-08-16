@@ -14,7 +14,7 @@ from app.db.models.tariff import Tariff  # and enums if you defined them
 
 from app.core.security import get_password_hash
 
-from app.routes import import_readings, reading, auth, tariff, uicomponent, contract, supplier, utility
+from app.routes import analytics, import_readings, reading, auth, tariff, uicomponent, contract, supplier, utility
 from decimal import Decimal
 
 @asynccontextmanager
@@ -728,6 +728,7 @@ app.include_router(contract.router)
 app.include_router(utility.router)
 app.include_router(import_readings.router)
 app.include_router(tariff.router)
+app.include_router(analytics.router)
 
 # 🌐 CORS
 origins = [
