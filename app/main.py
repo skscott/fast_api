@@ -145,36 +145,41 @@ async def lifespan(app: FastAPI):
                 contract_pdf="",
                 supplier_id=4
             ),
+            # Know values from 19-11-2019 
+            # 2020 19-11-2019 - 30-11-2020
             ContractModel(
-                name="2019 Nuon",
-                description="Nuon gas and electric",
-                start_date=date(2019, 12, 1),
+                name="2020 Nuon",
+                description="Nuon gas and electric 2020",
+                start_date=date(2019, 11, 19),
                 end_date=date(2020, 11, 30),
-                monthly_payment=Decimal("100"),
+                monthly_payment=Decimal("150"),
                 settlement_pdf="",
                 contract_pdf="",
-                supplier_id=2
-            ),
-            ContractModel(
-                name="2020 Essent Combo",
-                description="Essent Gas and electric",
-                start_date=date(2020, 12, 1),
-                end_date=date(2022, 11, 30),
-                monthly_payment=Decimal("115"),
-                settlement_pdf="Jaarrekening.pdf",
-                contract_pdf="Essent 2020 tarieven.pdf",
                 supplier_id=1
-            ),
+            ),    
+            # 2021 01-12-2020 - 12-11-2021
+            ContractModel(
+                name="2021 Essent",
+                description="Essent gas and electric 2021",
+                start_date=date(2020, 12, 1),
+                end_date=date(2021, 11, 12),
+                monthly_payment=Decimal("150"),
+                settlement_pdf="",
+                contract_pdf="",
+                supplier_id=1
+            ),    
+            # 2022 13-11-2021 - 30-11-2022           
             ContractModel(
                 name="2022 Essent",
                 description="Essent gas and electric 2022",
-                start_date=date(2022, 12, 1),
-                end_date=date(2023, 10, 31),
+                start_date=date(2021, 11, 13),
+                end_date=date(2022, 11, 30),
                 monthly_payment=Decimal("150"),
                 settlement_pdf="",
                 contract_pdf="",
                 supplier_id=1
             ),
+            # 2022 01-12-2022 - 31-10-2023          
             ContractModel(
                 name="2023 Essent",
                 description="Essent gas and electric 2023",
@@ -185,6 +190,7 @@ async def lifespan(app: FastAPI):
                 contract_pdf="",
                 supplier_id=1
             ),
+            # 2024 01-11-2024 - 17-11-2024
             ContractModel(
                 name="2024 Eneco Stroom en Gas",
                 description="Eneco Wind, Zon en Gas",
@@ -195,6 +201,7 @@ async def lifespan(app: FastAPI):
                 contract_pdf="Contract_Eneco_2024.pdf",
                 supplier_id=7
             ),
+            # 2025 18-11-2024 - 17-11-2025
             ContractModel(
                 name="Essent 2025",
                 description="Gas and Electra",
@@ -246,8 +253,9 @@ async def lifespan(app: FastAPI):
         # Add this to your lifespan() block after contracts
         print("\U0001F50D Checking utility count...")
         if db.query(UtilityModel).count() == 0:
-            nuon_2019 = db.query(ContractModel).filter_by(name="2019 Nuon").first()
-            essent_2021 = db.query(ContractModel).filter_by(name="2020 Essent Combo").first()
+
+            nuon_2020 = db.query(ContractModel).filter_by(name="2020 Nuon").first()
+            essent_2021 = db.query(ContractModel).filter_by(name="2021 Essent").first()
             essent_2022 = db.query(ContractModel).filter_by(name="2022 Essent").first()
             essent_2023 = db.query(ContractModel).filter_by(name="2023 Essent").first()
             eneco_2024 = db.query(ContractModel).filter_by(name="2024 Eneco Stroom en Gas").first()
@@ -265,8 +273,6 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2018",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eflex_2018.id
                 ),
@@ -276,8 +282,6 @@ async def lifespan(app: FastAPI):
                     description="Electricity for 2018",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eflex_2018.id
                 ),
@@ -287,53 +291,44 @@ async def lifespan(app: FastAPI):
                     description="Gas for 2018",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eflex_2018.id
                 ),
-
+                # 2020 19-11-2019 - 30-11-2020
                 UtilityModel(
                     type="NORMAL",
-                    text="Nuon Electra 2019",
-                    description="Electricity for 2019",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    text="Nuon Electra 2020",
+                    description="Electricity for 2020",
+                    start_reading=Decimal("43188"),
+                    end_reading=Decimal("45602"),
                     estimated_use=Decimal("0"),
-                    contract_id=nuon_2019.id
+                    contract_id=nuon_2020.id
                 ),
                 UtilityModel(
                     type="REDUCED",
-                    text="Nuon Electra 2019",
-                    description="Electricity for 2019",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    text="Nuon Electra 2020",
+                    description="Electricity for 2020",
+                    start_reading=Decimal("44128"),
+                    end_reading=Decimal("46096"),
                     estimated_use=Decimal("0"),
-                    contract_id=nuon_2019.id
+                    contract_id=nuon_2020.id
                 ),
                 UtilityModel(
                     type="GAS",
-                    text="Nuon Gas 2019",
-                    description="Gas for 2019",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    text="Nuon Gas 2020",
+                    description="Gas for 2020",
+                    start_reading=Decimal("37535.27"),
+                    end_reading=Decimal("38038.28"),
                     estimated_use=Decimal("0"),
-                    contract_id=nuon_2019.id
+                    contract_id=nuon_2020.id
                 ),
+                # 2021 01-12-2020 - 12-11-2021
                 UtilityModel(
                     type="NORMAL",
                     text="Essent Electra 2021",
                     description="Electricity for 2021",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    start_reading=Decimal("45602"),
+                    end_reading=Decimal("48071"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2021.id
                 ),
@@ -341,97 +336,83 @@ async def lifespan(app: FastAPI):
                     type="REDUCED",
                     text="Essent Electra 2021",
                     description="Electricity for 2021",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
-                    estimated_use=Decimal("0"),
+                    start_reading=Decimal("46096"),
+                    end_reading=Decimal("48154"),
+                    estimated_use=Decimal("1937"),
                     contract_id=essent_2021.id
                 ),
                 UtilityModel(
                     type="GAS",
                     text="Essent Gas 2021",
                     description="Gas for 2021",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
-                    estimated_use=Decimal("0"),
+                    start_reading=Decimal("38038"),
+                    end_reading=Decimal("38273.75"),
+                    estimated_use=Decimal("2335"),
                     contract_id=essent_2021.id
                 ),
+                # 2022 13-11-2021 - 30-11-2022          
                 UtilityModel(
                     type="NORMAL",
                     text="Essent Electra 2022",
                     description="Electricity for 2022",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    start_reading=Decimal("47950"),
+                    end_reading=Decimal("51444"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2022.id
                 ),
                 UtilityModel(
                     type="REDUCED",
                     text="Essent Electra 2022",
-                    description="Electricity for 2022",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    description="Electricity for 2022 (13-11-21 30-11-2022)",
+                    start_reading=Decimal("48042"),
+                    end_reading=Decimal("48454"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2022.id
                 ),
                 UtilityModel(
                     type="GAS",
                     text="Essent Gas 2022",
-                    description="Gas for 2022",
-                    start_reading=Decimal("0"),
-                    end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    description="Gas for 2022 (13-11-21 30-11-2022)",
+                    start_reading=Decimal("38681"),
+                    end_reading=Decimal("39153"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2022.id
                 ),
+                # 2023 01-12-2022 - 30-11-2023          
                 UtilityModel(
                     type="NORMAL",
-                    text="Eelectric 2023",
+                    text="Eelectric 2023 ",
                     description="Gas and Electric 2023",
-                    start_reading=Decimal("51305"),
-                    end_reading=Decimal("51931"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    start_reading=Decimal("51555"),
+                    end_reading=Decimal("51904"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2023.id
-                ),                UtilityModel(
-                type="REDUCED",
+                ),                
+                UtilityModel(
+                    type="REDUCED",
                     text="Eelectric 2023",
                     description="Gas and Electric 2023",
-                    start_reading=Decimal("51305"),
-                    end_reading=Decimal("51931"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
+                    start_reading=Decimal("48454"),
+                    end_reading=Decimal("48454"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2023.id
-                ),
+                ),                
                 UtilityModel(
                     type="GAS",
                     text="Gas 2023",
                     description="Essent gas and electric 2023",
-                    start_reading=Decimal("39122"),
+                    start_reading=Decimal("39153"),
                     end_reading=Decimal("39437.63"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2023.id
                 ),
+                # 2024 01-12-2023 - 30-11-2024         
                 UtilityModel(
                     type="NORMAL",
                     text="Startdatum levering : 31 oktober 2023 Einddatum vaste looptijd : 30 oktober 2024",
                     description="Eneco HollandseWind & Zon Actie 1 jaar",
-                    start_reading=Decimal("51904"),
+                    start_reading=Decimal("52194"),
                     end_reading=Decimal("53067"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eneco_2024.id
                 ),
@@ -441,8 +422,6 @@ async def lifespan(app: FastAPI):
                     description="Eneco HollandseWind & Zon Actie 1 jaar",
                     start_reading=Decimal("48454"),
                     end_reading=Decimal("48454"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=eneco_2024.id
                 ),
@@ -452,8 +431,6 @@ async def lifespan(app: FastAPI):
                     description="Eneco Gas Actie 1 jaar",
                     start_reading=Decimal("39436.05"),
                     end_reading=Decimal("39713.25"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("300"),
                     contract_id=eneco_2024.id
                 ),
@@ -463,8 +440,6 @@ async def lifespan(app: FastAPI):
                     description="Essent Electra",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("53716"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
@@ -474,8 +449,6 @@ async def lifespan(app: FastAPI):
                     description="Essent Electra",
                     start_reading=Decimal("48454"),
                     end_reading=Decimal("48454"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
@@ -485,8 +458,6 @@ async def lifespan(app: FastAPI):
                     description="Essent Gas",
                     start_reading=Decimal("51305"),
                     end_reading=Decimal("39911.77"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=essent_2025.id
                 ),
@@ -499,8 +470,6 @@ async def lifespan(app: FastAPI):
                     description="Solar Energy 2023",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=sbss_solar_2023.id
                 ),
@@ -510,8 +479,6 @@ async def lifespan(app: FastAPI):
                     description="Solar Energy 2024",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=sbss_solar_2024.id
                 ),
@@ -521,8 +488,6 @@ async def lifespan(app: FastAPI):
                     description="Solar Energy 2025",
                     start_reading=Decimal("0"),
                     end_reading=Decimal("0"),
-                    start_reading_reduced=Decimal("0"),
-                    end_reading_reduced=Decimal("0"),
                     estimated_use=Decimal("0"),
                     contract_id=sbss_solar_2025.id
                 ),
