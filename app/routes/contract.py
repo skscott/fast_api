@@ -9,7 +9,7 @@ from app.db.models.utility import Utility
 from app.db.schemas.contract import ContractCreate, ContractRead, ContractUpdate
 from app.db.schemas.tariff import TariffCreate, TariffRead
 from app.crud import contract as crud
-from app.db.schemas.utility import UtilityRead
+from app.db.schemas.utility import UtilityOut, UtilityRead
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
 
@@ -57,9 +57,21 @@ def create_tariff_for_contract(contract_id: int, body: TariffCreate, db: Session
     db.refresh(tariff)
     return tariff
 
-@router.get("/{contract_id}/utilities", response_model=List[UtilityRead])
+@router.get(
+    "/{contract_id}/utilities",
+    response_model=list[UtilityOut],            # or List[UtilityOut]
+    response_model_exclude_none=True            # omit nulls like end_reading=None
+)
 def list_utilities_for_contract(contract_id: int, db: Session = Depends(get_db)):
-    contract = db.query(Contract).get(contract_id)
-    if not contract:
+    # SQLAlchemy 2.x style get (avoids deprecated .query(...).get)
+    contract_obj = db.get(Contract, contract_id)
+    if contract_obj is None:
         raise HTTPException(status_code=404, detail="Contract not found")
-    return db.query(Utility).filter(Utility.contract_id == contract_id).all()
+
+    # Return ORM rows; Pydantic v2 needs model_config.from_attributes = True on UtilityOut
+    return (
+        db.query(Utility)
+          .filter(Utility.contract_id == contract_id)
+          .order_by(Utility.type)  # optional nicety
+          .all()
+    )

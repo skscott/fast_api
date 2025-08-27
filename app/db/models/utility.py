@@ -10,8 +10,8 @@ class Utility(Base):
     text = Column(String(255))
     description = Column(String(255))
     start_reading = Column(Numeric(10, 3))
-    end_reading = Column(Numeric(10, 3))
-    estimated_use = Column(Numeric(10, 3))
+    end_reading = Column(Numeric(10, 3), nullable=True)
+    estimated_use = Column(Numeric(10, 3), nullable=True)
     
     contract_id = Column(Integer, ForeignKey("contract.id"))
 

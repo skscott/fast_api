@@ -2,21 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "🐍 FastAPI (debug with uvicorn)",
+      "name": "🐍 FastAPI (module=uvicorn)",
       "type": "debugpy",
       "request": "launch",
-      "program": "/home/ss/Source/etrackerv3/fast_api/venv/bin/uvicorn",
-      "args": [
-        "app.main:app",
-        "--reload",
-        "--host", "127.0.0.1",
-        "--port", "8000"
-      ],
-      "jinja": true,
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}/fast_api",
       "console": "integratedTerminal",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}",
-        "PYTHONWARNINGS": "ignore"
+        "PYTHONPATH": "${workspaceFolder}/fast_api"
       }
     }
   ]
