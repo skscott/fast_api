@@ -119,7 +119,7 @@ async def lifespan(app: FastAPI):
         print(f"📊 Contract count = {count}")        
 
         if db.query(ContractModel).count() == 0:
-            sbss = db.query(SupplierModel).filter_by(name="SBSS Solar Energy").first()
+            sbss_id = get_id(db, SupplierModel.id, name="SBSS Solar Energy")
             #
             # Gas and electric
             #
@@ -232,7 +232,7 @@ async def lifespan(app: FastAPI):
                 monthly_payment=Decimal("0"),
                 settlement_pdf="",
                 contract_pdf="",
-                supplier_id=sbss.id
+                supplier_id=sbss_id
             ),
             ContractModel(
                 name="SBSS Solar Energy 2024",
@@ -242,7 +242,7 @@ async def lifespan(app: FastAPI):
                 monthly_payment=Decimal("0"),
                 settlement_pdf="",
                 contract_pdf="",
-                supplier_id=sbss.id
+                supplier_id=sbss_id
             ),
             ContractModel(
                 name="SBSS Solar Energy 2025",
@@ -252,7 +252,7 @@ async def lifespan(app: FastAPI):
                 monthly_payment=Decimal("0"),
                 settlement_pdf="",
                 contract_pdf="",
-                supplier_id=sbss.id
+                supplier_id=sbss_id
             ),
             ]
             db.add_all(default_contracts)
@@ -682,12 +682,13 @@ async def lifespan(app: FastAPI):
 
         db.commit()
 
-    except Exception as e:
-        print(f"Exception: {e}")
-
     except IntegrityError:
         db.rollback()
         print("⚠️ Seed data conflict — skipping.")
+
+    except Exception as e:
+        print(f"Exception: {e}")
+
     finally:
         db.close()
 

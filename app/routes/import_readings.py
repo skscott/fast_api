@@ -37,6 +37,23 @@ def _get_contract_for_timestamp(db: Session, ts: datetime) -> Contract | None:
         .first()
     )
 
+def _get_utility_for_timestamp(db: Session, ts: datetime, type_: str) -> Utility | None:
+    """
+    Return the utility of given type that is active at timestamp ts.
+    Filters by the parent contract date window to avoid SOLAR vs meter mix-ups.
+    """
+    return (
+        db.query(Utility)
+        .join(Contract, Contract.id == Utility.contract_id)
+        .filter(
+            func.upper(Utility.type) == func.upper(type_),
+            Contract.start_date <= ts,
+            Contract.end_date >= ts,
+        )
+        .order_by(Contract.start_date.desc())  # newest first if multiple match
+        .first()
+    )
+
 def _get_utility(db: Session, contract_id: int, type_: str) -> Utility | None:
     # case-sensitive in DB, but we normalize here just in case
     return (
@@ -88,8 +105,11 @@ def _upsert_reading(
     db.add(Reading(timestamp=ts, value=value, unit=unit, source="import", utility_id=utility.id))
     return (True, "inserted")
 
-# ---------- meter readings importer ----------
+from datetime import date
 
+REDUCED_CUTOFF = date(2022, 1, 18)  # last valid day for night-rate readings
+
+# ---------- meter readings importer ----------
 @router.post("/meter-readings")
 def import_meter_readings(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(".csv"):
@@ -98,58 +118,53 @@ def import_meter_readings(file: UploadFile = File(...), db: Session = Depends(ge
     contents = file.file.read().decode("utf-8", errors="replace")
     reader = csv.DictReader(StringIO(contents))
 
-    inserted = 0
-    updated = 0
-    skipped = 0
+    inserted = updated = skipped = 0
 
     for row in reader:
         try:
-            # Accept both full ISO and plain date
-            raw_ts = row.get("consumption_date", "").strip()
+            raw_ts = (row.get("consumption_date") or "").strip()
             ts = datetime.fromisoformat(raw_ts) if "T" in raw_ts else datetime.combine(datetime.fromisoformat(raw_ts).date(), time.min)
 
             contract = _get_contract_for_timestamp(db, ts)
             if not contract:
                 skipped += 1
-                print(f"❌ No contract covering {ts}")
+                print(f"❌ No contract covering {ts.date()}")
                 continue
 
-            # Look up utilities by contract + type
-            normal  = _get_utility(db, contract.id, "NORMAL")
-            reduced = _get_utility(db, contract.id, "REDUCED")
-            gas     = _get_utility(db, contract.id, "GAS")
+            # Utilities active at ts (avoids SOLAR contract completely)
+            normal  = _get_utility_for_timestamp(db, ts, "NORMAL")
+            reduced = _get_utility_for_timestamp(db, ts, "REDUCED")
+            gas     = _get_utility_for_timestamp(db, ts, "GAS")
 
-            # Parse values (None if blank/invalid)
-            v_stand_i  = _parse_decimal(row.get("stand_i"))   # REDUCED (legacy/night)
-            v_stand_ii = _parse_decimal(row.get("stand_ii"))  # NORMAL  (day/single)
-            v_gas      = _parse_decimal(row.get("gas"))
+            # Parse values (no 'stand' single-column anymore)
+            v_stand_i  = _parse_decimal(row.get("stand_i"))     # → REDUCED
+            v_stand_ii = _parse_decimal(row.get("stand_ii"))    # → NORMAL
+            v_gas      = _parse_decimal(row.get("gas"))         # → GAS
 
-            # REDUCED -> stand_i -> reduced utility
-            if v_stand_i is not None and reduced is not None:
-                ok, msg = _upsert_reading(db, reduced, ts, v_stand_i)
-                inserted += 1 if ok else 0
-                updated  += 0 if ok else 1
-            elif v_stand_i is not None and reduced is None:
-                skipped += 1
-                print(f"⚠️ No REDUCED utility for contract {contract.id} at {ts}; value={v_stand_i} skipped")
+            # REDUCED
+            if v_stand_i is not None:
+                if reduced is not None:
+                    ok, _ = _upsert_reading(db, reduced, ts, v_stand_i)
+                    inserted += 1 if ok else 0; updated += 0 if ok else 1
+                else:
+                    skipped += 1; print(f"⚠️ No REDUCED utility active at {ts} (row={row})")
 
-            # NORMAL -> stand_ii -> normal utility
-            if v_stand_ii is not None and normal is not None:
-                ok, msg = _upsert_reading(db, normal, ts, v_stand_ii)
-                inserted += 1 if ok else 0
-                updated  += 0 if ok else 1
-            elif v_stand_ii is not None and normal is None:
-                skipped += 1
-                print(f"⚠️ No NORMAL utility for contract {contract.id} at {ts}; value={v_stand_ii} skipped")
+            # NORMAL
+            if v_stand_ii is not None:
+                if normal is not None:
+                    ok, _ = _upsert_reading(db, normal, ts, v_stand_ii)
+                    inserted += 1 if ok else 0; updated += 0 if ok else 1
+                else:
+                    skipped += 1; print(f"⚠️ No NORMAL utility active at {ts} (row={row})")
 
-            # GAS -> gas utility
-            if v_gas is not None and gas is not None:
-                ok, msg = _upsert_reading(db, gas, ts, v_gas)
-                inserted += 1 if ok else 0
-                updated  += 0 if ok else 1
-            elif v_gas is not None and gas is None:
-                skipped += 1
-                print(f"⚠️ No GAS utility for contract {contract.id} at {ts}; value={v_gas} skipped")
+            # GAS
+            if v_gas is not None:
+                if gas is not None:
+                    ok, _ = _upsert_reading(db, gas, ts, v_gas)
+                    inserted += 1 if ok else 0; updated += 0 if ok else 1
+                else:
+                    skipped += 1; print(f"⚠️ No GAS utility active at {ts} (row={row})")
+
 
         except Exception as e:
             skipped += 1
