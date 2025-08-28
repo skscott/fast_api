@@ -50,7 +50,7 @@ find . -type d -name __pycache__ -exec rm -r {} +
 ## Seed readings
 
 curl -X POST http://localhost:8000/import/meter-readings \
-  -F "file=@reading_seed.csv"
+  -F "file=@reading_seed_2024.csv"
 
 curl -X POST http://localhost:8000/import/solar-readings \
   -F "file=@solar.csv"
